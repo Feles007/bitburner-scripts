@@ -32,15 +32,19 @@ function get_targets(ns) {
 
 	get_targets_internal(ns, "home");
 
+	// Remove references to home
 	const filtered_targets = targets.filter(value => value !== "home");
 	
+	// Remove duplicates and return
 	return [...new Set(filtered_targets)];
 }
 function send_to_target(ns, hack_js_ram, target) {
 
+	// Crack ports
 	const ports = ns.getServerNumPortsRequired(target);
-
 	switch (ports) {
+		case 2:
+			ns.ftpcrack(target);
 		case 1:
 			ns.brutessh(target);
 		case 0:
@@ -50,12 +54,26 @@ function send_to_target(ns, hack_js_ram, target) {
 			return;
 	}
 	
+	// Get root access
 	ns.nuke(target);
+	// Copy over hacking script
 	ns.scp("hack.js", target);
 
+	// If server has no RAM (somehow?) print and skip it
 	const max_ram = ns.getServerMaxRam(target);
+	if (max_ram == 0.0) {
+		ns.tprint("Skipped: No RAM - '" + target + "'");
+		return;
+	}
 	const threads = Math.floor(max_ram / hack_js_ram);
 	
+	// If hacking skill isn't high enough, print and skip it
+	if (ns.getServerRequiredHackingLevel(target) > ns.getHackingLevel()) {
+		ns.tprint("Skipped: Hacking level too low - '" + target + "'");
+		return;
+	}
+	
+	// Run hack command
 	ns.exec(
 		"hack.js",
 		target,
