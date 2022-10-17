@@ -7,7 +7,7 @@ export async function main(ns) {
 	while(true) {
 		if (ns.getServerSecurityLevel(target) > security_threshold) {
 			await ns.weaken(target);
-		} else if (ns.getServerMoneyAvailable(target) > money_threshold) {
+		} else if (ns.getServerMoneyAvailable(target) < money_threshold) {
 			await ns.grow(target);
 		} else {
 			await ns.hack(target);
