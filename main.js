@@ -32,8 +32,12 @@ function get_targets(ns) {
 
 	get_targets_internal(ns, "home");
 
-	// Remove references to home
-	const filtered_targets = targets.filter(value => value !== "home");
+	const purchased_servers = ns.getPurchasedServers();
+
+	// Remove references to home and purchased servers
+	const filtered_targets = targets.filter(value => {
+		return (value !== "home") && !(purchased_servers.includes(value));
+	});
 	
 	// Remove duplicates and return
 	return [...new Set(filtered_targets)];
@@ -43,12 +47,10 @@ function send_to_target(ns, hack_js_ram, target) {
 	// Crack ports
 	const ports = ns.getServerNumPortsRequired(target);
 	switch (ports) {
-		case 2:
-			ns.ftpcrack(target);
-		case 1:
-			ns.brutessh(target);
-		case 0:
-			break;
+		case 3: ns.relaysmtp(target);
+		case 2: ns.ftpcrack(target);
+		case 1: ns.brutessh(target);
+		case 0: break;
 		default:
 			ns.tprint("Skipped: " + ports + " ports - '" + target + "'");
 			return;
@@ -68,8 +70,9 @@ function send_to_target(ns, hack_js_ram, target) {
 	const threads = Math.floor(max_ram / hack_js_ram);
 	
 	// If hacking skill isn't high enough, print and skip it
-	if (ns.getServerRequiredHackingLevel(target) > ns.getHackingLevel()) {
-		ns.tprint("Skipped: Hacking level too low - '" + target + "'");
+	const required_hacking_level = ns.getServerRequiredHackingLevel(target);
+	if (required_hacking_level > ns.getHackingLevel()) {
+		ns.tprint("Skipped: Requires hacking level of " + required_hacking_level + " '" + target + "'");
 		return;
 	}
 	
