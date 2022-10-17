@@ -82,7 +82,7 @@ function send_to_target(ns, hack_js_ram, target) {
 		target,
 		threads,
 		target,
-		ns.getServerMaxMoney(target) * 0.3,
+		ns.getServerMaxMoney(target) * 0.0435,
 		ns.getServerMinSecurityLevel(target) * 3.5,
 	);
 }
