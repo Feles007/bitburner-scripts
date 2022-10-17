@@ -1,7 +1,7 @@
 export async function main(ns) {
 
 	const target = "";
-  const total_ram = 1024;
+	const total_ram = 1024;
 
 	const hack_js_ram = ns.getScriptRam("hack.js");
 	const max_ram = total_ram - ns.getScriptRam("attack.js");
