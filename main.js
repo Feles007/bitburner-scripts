@@ -4,12 +4,13 @@ export async function main(ns) {
 
 	const targets = get_targets(ns);
 
-	if (ns.args[0] == "kill") {
-		for (let i = 0; i < targets.length; ++i) {
-			ns.killall(targets[i]);
-		}
-		return;
+
+
+	for (let i = 0; i < targets.length; ++i) {
+		ns.killall(targets[i]);
 	}
+
+	if (ns.args[0] == "kill") { return; }
 
 	for (let i = 0; i < targets.length; ++i) {
 		send_to_target(ns, hack_js_ram, targets[i]);
@@ -58,6 +59,9 @@ function send_to_target(ns, hack_js_ram, target) {
 	
 	// Get root access
 	ns.nuke(target);
+
+	// Remove old hacking script
+	ns.rm("hack.js", target);
 	// Copy over hacking script
 	ns.scp("hack.js", target);
 
