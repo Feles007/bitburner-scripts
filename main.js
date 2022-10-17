@@ -4,13 +4,12 @@ export async function main(ns) {
 
 	const targets = get_targets(ns);
 
-
-
-	for (let i = 0; i < targets.length; ++i) {
-		ns.killall(targets[i]);
+	if (ns.args[0] == "kill") {
+		for (let i = 0; i < targets.length; ++i) {
+			ns.killall(targets[i]);
+		}
+		return;
 	}
-
-	if (ns.args[0] == "kill") { return; }
 
 	for (let i = 0; i < targets.length; ++i) {
 		send_to_target(ns, hack_js_ram, targets[i]);
