@@ -1,3 +1,6 @@
+let no_ram_count = 0;
+let no_money_count = 0;
+
 export async function main(ns) {
 
 	const hack_js_ram = ns.getScriptRam("hack.js");
@@ -14,6 +17,9 @@ export async function main(ns) {
 	for (let i = 0; i < targets.length; ++i) {
 		send_to_target(ns, hack_js_ram, targets[i]);
 	}
+
+	ns.tprint(no_ram_count + " targets have no RAM");
+	ns.tprint(no_money_count + " targets have no money");
 }
 function get_targets(ns) {
 
@@ -44,16 +50,16 @@ function get_targets(ns) {
 }
 function send_to_target(ns, hack_js_ram, target) {
 
-	// Skip targets with no money
-	if (ns.getServerMaxMoney(target) == 0.0) {
-		ns.tprint("Skipped: No money '" + target + "'");
-		return;
-	}
-
 	// If server has no RAM (somehow?) skip it
 	const max_ram = ns.getServerMaxRam(target);
 	if (max_ram == 0.0) {
-		ns.tprint("Skipped: No RAM - '" + target + "'");
+		++no_ram_count;
+		return;
+	}
+
+	// Skip targets with no money
+	if (ns.getServerMaxMoney(target) == 0.0) {
+		++no_money_count;
 		return;
 	}
 
