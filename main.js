@@ -44,9 +44,24 @@ function get_targets(ns) {
 }
 function send_to_target(ns, hack_js_ram, target) {
 
+	// Skip targets with no money
+	if (ns.getServerMaxMoney(target) == 0.0) {
+		ns.tprint("Skipped: No money '" + target + "'");
+		return;
+	}
+
+	// If server has no RAM (somehow?) skip it
+	const max_ram = ns.getServerMaxRam(target);
+	if (max_ram == 0.0) {
+		ns.tprint("Skipped: No RAM - '" + target + "'");
+		return;
+	}
+
 	// Crack ports
 	const ports = ns.getServerNumPortsRequired(target);
 	switch (ports) {
+		case 5: ns.sqlinject(target);
+		case 4: ns.httpworm(target);
 		case 3: ns.relaysmtp(target);
 		case 2: ns.ftpcrack(target);
 		case 1: ns.brutessh(target);
@@ -54,6 +69,13 @@ function send_to_target(ns, hack_js_ram, target) {
 		default:
 			ns.tprint("Skipped: " + ports + " ports - '" + target + "'");
 			return;
+	}
+
+	// If hacking skill isn't high enough, print and skip it
+	const required_hacking_level = ns.getServerRequiredHackingLevel(target);
+	if (required_hacking_level > ns.getHackingLevel()) {
+		ns.tprint("Skipped: Requires hacking level of " + required_hacking_level + " '" + target + "'");
+		return;
 	}
 	
 	// Get root access
@@ -64,20 +86,7 @@ function send_to_target(ns, hack_js_ram, target) {
 	// Copy over hacking script
 	ns.scp("hack.js", target);
 
-	// If server has no RAM (somehow?) print and skip it
-	const max_ram = ns.getServerMaxRam(target);
-	if (max_ram == 0.0) {
-		ns.tprint("Skipped: No RAM - '" + target + "'");
-		return;
-	}
 	const threads = Math.floor(max_ram / hack_js_ram);
-	
-	// If hacking skill isn't high enough, print and skip it
-	const required_hacking_level = ns.getServerRequiredHackingLevel(target);
-	if (required_hacking_level > ns.getHackingLevel()) {
-		ns.tprint("Skipped: Requires hacking level of " + required_hacking_level + " '" + target + "'");
-		return;
-	}
 	
 	// Run hack command
 	ns.exec(
@@ -85,7 +94,7 @@ function send_to_target(ns, hack_js_ram, target) {
 		target,
 		threads,
 		target,
-		ns.getServerMaxMoney(target) * 0.0435,
+		ns.getServerMaxMoney(target) * 0.04,
 		ns.getServerMinSecurityLevel(target) * 3.5,
 	);
 }
