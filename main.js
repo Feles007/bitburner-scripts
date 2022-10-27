@@ -3,8 +3,6 @@ let usable_ports;
 
 export async function main(ns) {
 
-	no_ram_count = 0;
-	no_money_count = 0;
 	programs = {
 		brute_ssh: false,
 		ftp_crack: false,
