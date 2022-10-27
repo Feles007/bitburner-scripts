@@ -1,5 +1,3 @@
-let no_ram_count;
-let no_money_count;
 let programs;
 let usable_ports;
 
@@ -32,9 +30,6 @@ export async function main(ns) {
 	for (let i = 0; i < targets.length; ++i) {
 		send_to_target(ns, hack_js_ram, targets[i]);
 	}
-
-	ns.tprint(no_ram_count + " targets have no RAM");
-	ns.tprint(no_money_count + " targets have no money");
 }
 function get_programs(ns) {
 	if (ns.fileExists("BruteSSH.exe")) {
@@ -87,19 +82,6 @@ function get_targets(ns) {
 }
 function send_to_target(ns, hack_js_ram, target) {
 
-	// If server has no RAM (somehow?) skip it
-	const max_ram = ns.getServerMaxRam(target);
-	if (max_ram == 0.0) {
-		++no_ram_count;
-		return;
-	}
-
-	// Skip targets with no money
-	if (ns.getServerMaxMoney(target) == 0.0) {
-		++no_money_count;
-		return;
-	}
-
 	// Crack ports
 	if (programs.brute_ssh) ns.brutessh(target);
 	if (programs.ftp_crack) ns.ftpcrack(target);
@@ -107,11 +89,26 @@ function send_to_target(ns, hack_js_ram, target) {
 	if (programs.http_worm) ns.httpworm(target);
 	if (programs.sql_inject) ns.sqlinject(target);
 
+	// If server has no RAM (somehow?) skip it
+	const max_ram = ns.getServerMaxRam(target);
+	if (max_ram == 0.0) {
+		return;
+	}
+
+	// Skip targets with no money
+	if (ns.getServerMaxMoney(target) == 0.0) {
+		return;
+	}
+
+	// Skip if not enough ports
 	const ports_required = ns.getServerNumPortsRequired(target);
 	if (ports_required > usable_ports) {
 		ns.tprint("Skipped: " + ports_required + " ports - '" + target + "'");
 		return;
 	}
+
+	// Get root access
+	ns.nuke(target);
 
 	// If hacking skill isn't high enough, print and skip it
 	const required_hacking_level = ns.getServerRequiredHackingLevel(target);
@@ -119,9 +116,6 @@ function send_to_target(ns, hack_js_ram, target) {
 		ns.tprint("Skipped: Requires hacking level of " + required_hacking_level + " '" + target + "'");
 		return;
 	}
-	
-	// Get root access
-	ns.nuke(target);
 
 	// Remove old hacking script
 	ns.rm("hack.js", target);
