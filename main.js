@@ -87,6 +87,12 @@ function send_to_target(ns, hack_js_ram, target) {
 	if (programs.http_worm) ns.httpworm(target);
 	if (programs.sql_inject) ns.sqlinject(target);
 
+	// Skip if not enough ports
+	const ports_required = ns.getServerNumPortsRequired(target);
+	if (ports_required <= usable_ports) {
+		ns.nuke(target);
+	}
+
 	// If server has no RAM (somehow?) skip it
 	const max_ram = ns.getServerMaxRam(target);
 	if (max_ram == 0.0) {
@@ -98,15 +104,10 @@ function send_to_target(ns, hack_js_ram, target) {
 		return;
 	}
 
-	// Skip if not enough ports
-	const ports_required = ns.getServerNumPortsRequired(target);
 	if (ports_required > usable_ports) {
 		ns.tprint("Skipped: " + ports_required + " ports - '" + target + "'");
 		return;
 	}
-
-	// Get root access
-	ns.nuke(target);
 
 	// If hacking skill isn't high enough, print and skip it
 	const required_hacking_level = ns.getServerRequiredHackingLevel(target);
