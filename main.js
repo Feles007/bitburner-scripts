@@ -1,11 +1,26 @@
-let no_ram_count = 0;
-let no_money_count = 0;
+let no_ram_count;
+let no_money_count;
+let programs;
+let usable_ports;
 
 export async function main(ns) {
+
+	no_ram_count = 0;
+	no_money_count = 0;
+	programs = {
+		brute_ssh: false,
+		ftp_crack: false,
+		relay_smtp: false,
+		http_worm: false,
+		sql_inject: false,
+	};
+	usable_ports = 0;
 
 	const hack_js_ram = ns.getScriptRam("hack.js");
 
 	const targets = get_targets(ns);
+
+	get_programs(ns);
 
 	if (ns.args[0] == "kill") {
 		for (let i = 0; i < targets.length; ++i) {
@@ -20,6 +35,28 @@ export async function main(ns) {
 
 	ns.tprint(no_ram_count + " targets have no RAM");
 	ns.tprint(no_money_count + " targets have no money");
+}
+function get_programs(ns) {
+	if (ns.fileExists("BruteSSH.exe")) {
+		programs.brute_ssh = true;
+		++usable_ports;
+	}
+	if (ns.fileExists("FTPCrack.exe")) {
+		programs.ftp_crack = true;
+		++usable_ports;
+	}
+	if (ns.fileExists("relaySMTP.exe")) {
+		programs.relay_smtp = true;
+		++usable_ports;
+	}
+	if (ns.fileExists("HTTPWorm.exe")) {
+		programs.http_worm = true;
+		++usable_ports;
+	}
+	if (ns.fileExists("SQLInject.exe")) {
+		programs.sql_inject = true;
+		++usable_ports;
+	}
 }
 function get_targets(ns) {
 
@@ -64,17 +101,16 @@ function send_to_target(ns, hack_js_ram, target) {
 	}
 
 	// Crack ports
-	const ports = ns.getServerNumPortsRequired(target);
-	switch (ports) {
-		case 5: ns.sqlinject(target);
-		case 4: ns.httpworm(target);
-		case 3: ns.relaysmtp(target);
-		case 2: ns.ftpcrack(target);
-		case 1: ns.brutessh(target);
-		case 0: break;
-		default:
-			ns.tprint("Skipped: " + ports + " ports - '" + target + "'");
-			return;
+	if (programs.brute_ssh) ns.brutessh(target);
+	if (programs.ftp_crack) ns.ftpcrack(target);
+	if (programs.relay_smtp) ns.relaysmtp(target);
+	if (programs.http_worm) ns.httpworm(target);
+	if (programs.sql_inject) ns.sqlinject(target);
+
+	const ports_required = ns.getServerNumPortsRequired(target);
+	if (ports_required > usable_ports) {
+		ns.tprint("Skipped: " + ports_required + " ports - '" + target + "'");
+		return;
 	}
 
 	// If hacking skill isn't high enough, print and skip it
