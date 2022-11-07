@@ -1,6 +1,7 @@
 let programs;
 let usable_ports;
 
+/** @param {NS} ns */
 export async function main(ns) {
 
 	programs = {
@@ -29,6 +30,7 @@ export async function main(ns) {
 		send_to_target(ns, hack_js_ram, targets[i]);
 	}
 }
+/** @param {NS} ns */
 function get_programs(ns) {
 	if (ns.fileExists("BruteSSH.exe")) {
 		programs.brute_ssh = true;
@@ -51,6 +53,7 @@ function get_programs(ns) {
 		++usable_ports;
 	}
 }
+/** @param {NS} ns */
 function get_targets(ns) {
 
 	let targets = [];
@@ -78,6 +81,7 @@ function get_targets(ns) {
 	// Remove duplicates and return
 	return [...new Set(filtered_targets)];
 }
+/** @param {NS} ns */
 function send_to_target(ns, hack_js_ram, target) {
 
 	// Crack ports
