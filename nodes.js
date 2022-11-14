@@ -1,4 +1,3 @@
-/** @param {NS} ns */
 export async function main(ns) {
 	while (true) {
 		if (upgrade(ns)) {
@@ -16,7 +15,6 @@ const UPGRADE_LEVEL = 1;
 const UPGRADE_RAM = 2;
 const UPGRADE_CORES = 3;
 
-/** @param {NS} ns */
 function upgrade(ns) {
 
 	const num_nodes = ns.hacknet.numNodes();
