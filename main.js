@@ -1,7 +1,6 @@
 let programs;
 let usable_ports;
 
-/** @param {NS} ns */
 export async function main(ns) {
 
 	programs = {
@@ -13,24 +12,32 @@ export async function main(ns) {
 	};
 	usable_ports = 0;
 
-	const hack_js_ram = ns.getScriptRam("hack.js");
-
 	const targets = get_targets(ns);
 
 	get_programs(ns);
 
-	if (ns.args[0] == "kill") {
-		for (let i = 0; i < targets.length; ++i) {
-			ns.killall(targets[i]);
-		}
-		return;
+	if (ns.args.length != 1) {
+		ns.tprint("Invalid args");
 	}
 
-	for (let i = 0; i < targets.length; ++i) {
-		send_to_target(ns, hack_js_ram, targets[i]);
+	switch (ns.args[0]) {
+		case "kill":
+			for (let i = 0; i < targets.length; ++i) {
+				ns.killall(targets[i]);
+			}
+			break;
+		case "attack":
+			for (let i = 0; i < targets.length; ++i) {
+				send_to_target(ns, targets[i]);
+			}
+			break;
+		case "deploy":
+			deploy(ns, targets);
+			break;
+		default:
+			ns.tprint("Unknown subcommand");
 	}
 }
-/** @param {NS} ns */
 function get_programs(ns) {
 	if (ns.fileExists("BruteSSH.exe")) {
 		programs.brute_ssh = true;
@@ -53,7 +60,6 @@ function get_programs(ns) {
 		++usable_ports;
 	}
 }
-/** @param {NS} ns */
 function get_targets(ns) {
 
 	let targets = [];
@@ -81,8 +87,7 @@ function get_targets(ns) {
 	// Remove duplicates and return
 	return [...new Set(filtered_targets)];
 }
-/** @param {NS} ns */
-function send_to_target(ns, hack_js_ram, target) {
+function send_to_target(ns, target) {
 
 	// Crack ports
 	if (programs.brute_ssh) ns.brutessh(target);
@@ -125,6 +130,7 @@ function send_to_target(ns, hack_js_ram, target) {
 	// Copy over hacking script
 	ns.scp("hack.js", target);
 
+	const hack_js_ram = ns.getScriptRam("hack.js");
 	const threads = Math.floor(max_ram / hack_js_ram);
 	
 	// Run hack command
@@ -136,4 +142,31 @@ function send_to_target(ns, hack_js_ram, target) {
 		ns.getServerMaxMoney(target) * 0.04,
 		ns.getServerMinSecurityLevel(target) * 3.5,
 	);
+}
+function deploy(ns, targets) {
+
+	targets.sort((a, b) => ns.getServerMaxMoney(b) - ns.getServerMaxMoney(a));
+
+	const purchased_servers = ns.getPurchasedServers().reverse();
+	
+	const hack_js_ram = ns.getScriptRam("hack.js");
+
+	for (let i = 0; i < purchased_servers.length; ++i) {
+		
+		const target = targets[i];
+		const server = purchased_servers[i];
+
+		const threads = Math.floor(ns.getServerMaxRam(server) / hack_js_ram);
+
+		ns.killall(server);
+		ns.scp("hack.js", server);
+		ns.exec(
+			"hack.js",
+			server,
+			threads,
+			target,
+			ns.getServerMaxMoney(target) * 0.3,
+			Math.min(90, ns.getServerMinSecurityLevel(target) * 3.5),
+		);
+	}
 }
